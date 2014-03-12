@@ -90,7 +90,11 @@ class Injector
 		$args = [];
 
 		foreach($reflection->getParameters() as $param) {
-			$type = $param->getClass()->getName();
+			try {
+				$type = $param->getClass()->getName();
+			} catch (ReflectionException $e) {
+				throw new ReflectionException("Cannot reflect class for parameter " . $param->getName() . ":" . $e->getMessage());
+			}
 
 			if (in_array($type, $this->resolving)) {
 				throw new LogicException("Recursive dependency: $type is currently instatiating.");
