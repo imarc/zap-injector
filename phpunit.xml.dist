@@ -6,10 +6,4 @@
             <directory>tests/Injector/</directory>
         </testsuite>
     </testsuites>
-
-    <filter>
-        <whitelist>
-            <directory suffix=".php">src/Injector/</directory>
-        </whitelist>
-    </filter>
 </phpunit>
