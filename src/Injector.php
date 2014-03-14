@@ -238,7 +238,7 @@ class Injector
 		}
 
 		if (isset($this->extensions[$class])) {
-			foreach ($this->extensions[$class] as $extension) {
+			while ($extension = array_shift($this->extensions[$class])) {
 				$this->invoke($extension);
 			}
 		}
