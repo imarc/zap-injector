@@ -71,6 +71,7 @@ class Injector
 
 
 	protected $factories = [];
+	protected $extensions = [];
 	protected $instances = [];
 	protected $resolving = [];
 
@@ -222,21 +223,27 @@ class Injector
 		}
 
 		if (isset($this->instances[$class])) {
-			return $this->instances[$class];
-		}
+			$instance = $this->instances[$class];
 
-		if (isset($this->factories[$class])) {
+		} elseif (isset($this->factories[$class])) {
 			array_push($this->resolving, $class);
-			$object = $this->invoke($this->factories[$class]);
+			$instance = $this->invoke($this->factories[$class]);
 			array_pop($this->resolving);
 
-			return $object;
+		} else {
+			throw new InvalidArgumentException(sprintf(
+				"'%s' has not been defined",
+				$class
+			));
 		}
 
-		throw new InvalidArgumentException(sprintf(
-			"'%s' has not been defined",
-			$class
-		));
+		if (isset($this->extensions[$class])) {
+			foreach ($this->extensions[$class] as $extension) {
+				$this->invoke($extension);
+			}
+		}
+
+		return $instance;
 	}
 
 
@@ -309,5 +316,13 @@ class Injector
 		} else {
 			throw new InvalidArgumentException("Classname is not a string.");
 		}
+	}
+
+	public function extend($class, Callable $callable)
+	{
+		if (!isset($this->extensions[$class])) {
+			$this->extensions[$class] = [];
+		}
+		$this->extensions[$class][] = $callable;
 	}
 }

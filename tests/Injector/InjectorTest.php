@@ -124,4 +124,21 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 
 		$injector->invoke(function(Injector $injector) {});
 	}
+
+	public function testExtend()
+	{
+		$injector = new Injector();
+
+		$injector->addInstance($injector);
+
+		$injector->addFactory('Closure', function () { return function() {}; });
+
+		$injector->extend('Closure', function(Injector $injector) {
+			$injector->addFactory('junk', function() { return 'stuff'; });
+		});
+
+		$injector->get('Closure');
+
+		$this->assertEquals('stuff', $injector->get('junk'));
+	}
 }
