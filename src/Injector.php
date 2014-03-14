@@ -71,7 +71,6 @@ class Injector
 
 	protected $factories = [];
 	protected $instances = [];
-
 	protected $resolving = [];
 
 	/**
@@ -85,51 +84,85 @@ class Injector
 	 */
 	public function invoke(Callable $callable)
 	{
-		$reflection = static::reflectCallable($callable);
-
-		$args = [];
-
-		foreach($reflection->getParameters() as $param) {
-			try {
-				$type = $param->getClass()->getName();
-			} catch (ReflectionException $e) {
-				throw new ReflectionException("Cannot reflect class for parameter " . $param->getName() . ":" . $e->getMessage());
-			}
-
-			if (in_array($type, $this->resolving)) {
-				throw new LogicException("Recursive dependency: $type is currently instatiating.");
-			}
-
-			$arg = $this->get($type);
-			$args[] = $param->allowsNull() && $arg === undefined ? null : $arg;
-		}
+		$args = $this->reflectParameters($callable);
 
 		return call_user_func_array($callable, $args);
 	}
 
+	/**
+	 * Creates a new instance of a class, injecting dependencies.
+	 *
+	 * @param $class mixed
+	 *     The classname or try to reflect and construct.
+	 * @return mixed
+	 *     An instance of the class requested.
+	 */
 	public function create($class)
 	{
-		try {
-			$reflection = static::reflectCallable([$class, '__construct']);
-		} catch (ReflectionException $e) {
-			return new $class();
+		if (!$class || !is_string($class)) {
+			throw new InvalidArgumentException(sprintf(
+				"'%s' is not a valid argument for Injector->create().",
+				$class
+			));
 		}
 
-		$args = [];
-
-		foreach($reflection->getParameters() as $param) {
-			$type = $param->getClass()->getName();
-
-			if (in_array($type, $this->resolving)) {
-				throw new LogicException("Recursive dependency: $type is currently instatiating.");
-			}
-
-			$arg = $this->get($type);
-			$args[] = $param->allowsNull() && $arg === undefined ? null : $arg;
+		try {
+			$args = $this->reflectParameters([$class, '__construct']);
+		} catch (ReflectionException $e) {
+			//Happens when there's no defined constructor
+			return new $class();
 		}
 
 		$reflection_class = new ReflectionClass($class);
 		return $reflection_class->newInstanceArgs($args);
+	}
+
+	/**
+	 * reflectParameters is an internal
+	 *
+	 * @param $callable mixed
+	 *     The Closure or object to reflect parameters for.
+	 * @return mixed[]
+	 *     An array of arguments for injection.
+	 */
+	protected function reflectParameters($callable)
+	{
+		$reflection = static::reflectCallable($callable);
+
+		$args = [];
+
+		foreach ($reflection->getParameters() as $param) {
+			$typehint = $param->getClass();
+			if ($typehint === null) {
+				if ($param->isDefaultValueAvailable()) {
+					$args[] = $param->getDefaultValue();
+					continue;
+				} else {
+					throw new LogicException(sprintf(
+						"Argument '%s' is not typehinted and has not default value.",
+						$param->getName()
+					));
+				}
+			}
+
+			$typehint =  $typehint->getName();
+
+			if (in_array($typehint, $this->resolving)) {
+				throw new LogicException(sprintf(
+					"Recursive dependency: '%s' is currently instantiating.",
+					$typehint
+				));
+			}
+
+			$arg = $this->get($typehint);
+			if ($arg === null && $param->isDefaultValueAvailable()) {
+				$args[] = $param->getDefaultValue();
+			} else {
+				$args[] = $arg;
+			}
+		}
+
+		return $args;
 	}
 
 
@@ -171,6 +204,7 @@ class Injector
 	 */
 	public function get($class)
 	{
+		var_dump(__METHOD__, $class);
 		if (isset($this->instances[$class])) {
 			return $this->instances[$class];
 		}
