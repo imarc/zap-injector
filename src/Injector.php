@@ -44,10 +44,11 @@ class Injector
 	/**
 	 * Reflect a callable
 	 *
-	 * @param $callable Callable
+	 * @param Callable $callable
 	 *     The callable to reflect
 	 *
 	 * @return ReflectionFunction|ReflectionMethod
+	 *     The ReflectionFunction or ReflectionMethod for the given callable.
 	 */
 	static protected function reflectCallable($callable)
 	{
@@ -74,10 +75,10 @@ class Injector
 	protected $resolving = [];
 
 	/**
-	 * Invoke a callable and injects dependencies
+	 * Invokes a callable, injecting dependencies to match its reflected parameters.
 	 *
-	 * @param $callable mixed
-	 *     The Closure or object to inject dependencies into
+	 * @param Callable $callable
+	 *     The Closure or object to inject dependencies into and invoke.
 	 *
 	 * @return mixed
 	 *     The value return from the callable
@@ -92,7 +93,7 @@ class Injector
 	/**
 	 * Creates a new instance of a class, injecting dependencies.
 	 *
-	 * @param $class mixed
+	 * @param string $class
 	 *     The classname or try to reflect and construct.
 	 * @return mixed
 	 *     An instance of the class requested.
@@ -101,7 +102,7 @@ class Injector
 	{
 		if (!$class || !is_string($class)) {
 			throw new InvalidArgumentException(sprintf(
-				"'%s' is not a valid argument for Injector->create().",
+				"'%s' is not a valid argument for ->create().",
 				$class
 			));
 		}
@@ -118,14 +119,15 @@ class Injector
 	}
 
 	/**
-	 * reflectParameters is an internal
+	 * reflectParameters is an internal method that reflects and returns an
+	 * array of arguments for injection.
 	 *
-	 * @param $callable mixed
+	 * @param Callable $callable
 	 *     The Closure or object to reflect parameters for.
 	 * @return mixed[]
 	 *     An array of arguments for injection.
 	 */
-	protected function reflectParameters($callable)
+	protected function reflectParameters(Callable $callable)
 	{
 		$reflection = static::reflectCallable($callable);
 
@@ -167,24 +169,32 @@ class Injector
 
 
 	/**
-	 * Confirms if a class has been set
+	 * Confirms if a class or interface has been defined in the Injector.
 	 *
-	 * @param $class string
-	 *     The type to check
+	 * @param string $class
+	 *     The class or interface name to check.
 	 *
 	 * @return boolean
+	 *     Whether it has been defined.
 	 */
 	public function has($class)
 	{
+		if (!$class || !is_string($class)) {
+			throw new InvalidArgumentException(sprintf(
+				"'%s' is not a valid argument for ->has().",
+				$class
+			));
+		}
+
 		return isset($this->factories[$class]) || isset($this->instances[$class]);
 	}
 
 
 	/**
-	 * Unsets a registered class
+	 * Unsets a registered class.
 	 *
-	 * @param $class string
-	 *     The class to unset
+	 * @param string $class
+	 *     The class or interface to unset.
 	 */
 	public function remove($class)
 	{
@@ -194,17 +204,23 @@ class Injector
 
 
 	/**
-	 * get a dependency for the supplied class
+	 * Get a dependency from the Injector for class or interface name.
 	 *
-	 * @param $type string
-	 *     The type to get
+	 * @param string $class
+	 *     The $class or interface name to get.
 	 *
 	 * @return mixed
 	 *     The dependency/type value
 	 */
 	public function get($class)
 	{
-		var_dump(__METHOD__, $class);
+		if (!$class || !is_string($class)) {
+			throw new InvalidArgumentException(sprintf(
+				"'%s' is not a valid argument for ->get().",
+				$class
+			));
+		}
+
 		if (isset($this->instances[$class])) {
 			return $this->instances[$class];
 		}
@@ -217,22 +233,27 @@ class Injector
 			return $object;
 		}
 
-		throw new InvalidArgumentException("$class has not been defined");
+		throw new InvalidArgumentException(sprintf(
+			"'%s' has not been defined",
+			$class
+		));
 	}
 
 
 	/**
-	 * Registers a dependency for injection
+	 * Registers a factory for dependency injection. This factory will only be
+	 * called the first time the dependency is needed; after that, the instance
+	 * is stored and reused.
 	 *
 	 * @throws \InvalidArgumentException
 	 *
-	 * @param $class string
-	 *     The class to register
+	 * @param string $class
+	 *     The class or interface to register this factory for.
 	 *
-	 * @param $factory mixed A callable
-	 *     The factory used to create the dependency
+	 * @param Callable $factory
+	 *     The factory used to create the dependency.
 	 */
-	public function addFactory($class, $factory)
+	public function addFactory($class, Callable $factory)
 	{
 		if (is_callable($factory)) {
 			$this->factories[$class] = $factory;
@@ -241,6 +262,16 @@ class Injector
 		}
 	}
 
+	/**
+	 * Registers an instance for dependency injection. If only one argument is
+	 * provided, that argument is used as the instance and the classname of the
+	 * instance is used for $class.
+	 *
+	 * @param string $class
+	 *     The class or interface to register this instance for.
+	 * @param mixed $instance
+	 *     The instance to register.
+	 */
 	public function addInstance($class, $instance=null)
 	{
 		if ($instance === null) {
@@ -255,6 +286,17 @@ class Injector
 		}
 	}
 
+	/**
+	 * Registers a class for dependency injection. If only one argument is
+	 * provided, that argument is used as both the classname to construct and
+	 * the class to register the class for.
+	 *
+	 * @param mixed $key_class
+	 *     The class or interface to register this instance for.
+	 * @param mixed $class
+	 *     The class to construct. Dependencies will be injected to the
+	 *     constructor.
+	 */
 	public function addClass($key_class, $class=null)
 	{
 		if ($class === null) {
