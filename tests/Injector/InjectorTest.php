@@ -25,16 +25,6 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	/**
      * @expectedException \InvalidArgumentException
 	 */
-	public function testSetInvalidOffset()
-	{
-		$injector = new Injector();
-		$injector->addFactory('Injector', 'Not Allowed');
-	}
-
-
-	/**
-     * @expectedException \InvalidArgumentException
-	 */
 	public function testGetInvalidOffset()
 	{
 		$injector = new Injector();

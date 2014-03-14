@@ -122,12 +122,12 @@ class Injector
 	 * reflectParameters is an internal method that reflects and returns an
 	 * array of arguments for injection.
 	 *
-	 * @param Callable $callable
+	 * @param mixed $callable
 	 *     The Closure or object to reflect parameters for.
 	 * @return mixed[]
 	 *     An array of arguments for injection.
 	 */
-	protected function reflectParameters(Callable $callable)
+	protected function reflectParameters($callable)
 	{
 		$reflection = static::reflectCallable($callable);
 
