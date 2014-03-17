@@ -34,11 +34,16 @@ $instance = $injector->create('some\class');
 
 ## Changelog
 
-### 1.x
+### 0.x
 
-#### 1.1.0
+#### 0.2.0
+* Added ->register(), removed ->addFactory(), ->addInstance(), and ->addClass()
+* Renamed ->remove() to ->unregister()
+* Other refactoring
+
+#### 0.1.1
 * Added ->extend() method, similar to Pimple. Callbacks configured with
   ->extend() are called after an instance is created by a factory.
 
-#### 1.0.0
+#### 0.1.0
 * Initial Release, full of bugs
