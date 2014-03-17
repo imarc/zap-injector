@@ -187,7 +187,7 @@ class Injector
 			));
 		}
 
-		return isset($this->factories[$class]) || isset($this->instances[$class]);
+		return array_key_exists($class, $this->factories) || array_key_exists($class, $this->instances);
 	}
 
 
@@ -222,13 +222,15 @@ class Injector
 			));
 		}
 
-		if (isset($this->instances[$class])) {
+		if (array_key_exists($class, $this->instances)) {
 			$instance = $this->instances[$class];
 
-		} elseif (isset($this->factories[$class])) {
+		} elseif (array_key_exists($class, $this->factories)) {
 			array_push($this->resolving, $class);
 			$instance = $this->invoke($this->factories[$class]);
 			array_pop($this->resolving);
+
+			$this->instances[$class] = $instance;
 
 		} else {
 			throw new InvalidArgumentException(sprintf(
@@ -237,7 +239,7 @@ class Injector
 			));
 		}
 
-		if (isset($this->extensions[$class])) {
+		if (array_key_exists($class, $this->extensions)) {
 			while ($extension = array_shift($this->extensions[$class])) {
 				$this->invoke($extension);
 			}
@@ -320,7 +322,7 @@ class Injector
 
 	public function extend($class, Callable $callable)
 	{
-		if (!isset($this->extensions[$class])) {
+		if (!array_key_exists($class, $this->extensions)) {
 			$this->extensions[$class] = [];
 		}
 		$this->extensions[$class][] = $callable;
