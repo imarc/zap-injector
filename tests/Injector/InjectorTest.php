@@ -11,14 +11,11 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	{
 		$injector = new Injector();
 
-		$injector->addFactory('Closure', function() {
+		$injector->register('Closure', function() {
 			return new Injector();
 		});
 
-		$injector->addFactory('CallableObject', new DummyFactory());
-
 		$this->assertInstanceOf('iMarc\Zap\Injector', $injector->get('Closure'));
-		$this->assertInstanceOf('iMarc\Zap\Injector', $injector->get('CallableObject'));
 	}
 
 
@@ -35,7 +32,7 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	public function testIsset()
 	{
 		$injector = new Injector();
-		$injector->addFactory('Test', function() {});
+		$injector->register('Test', function() {});
 
 		$this->assertEquals(true, $injector->has('Test'));
 	}
@@ -44,9 +41,9 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	public function testUnset()
 	{
 		$injector = new Injector();
-		$injector->addFactory('Test', function() {});
+		$injector->register('Test', function() {});
 
-		$injector->remove('Test');
+		$injector->unregister('Test');
 
 		$this->assertEquals(false, $injector->has('Test'));
 	}
@@ -57,13 +54,11 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 		$test = $this;
 
 		$injector = new Injector();
-		$injector->addFactory('iMarc\Zap\Injector', new DummyFactory());
-		$injector->addFactory('Closure', function () { return function() {}; });
+		$injector->register('Closure', function () { return function() {}; });
 
 		$injector->invoke(
-			function(\Closure $func, Injector $injector) use ($test) {
+			function(\Closure $func) use ($test) {
 				$test->assertInstanceOf('Closure', $func);
-				$test->assertInstanceOf('iMarc\Zap\Injector', $injector);
 			}
 		);
 
@@ -78,7 +73,7 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	public function testCreate()
 	{
 		$injector = new Injector();
-		$injector->addFactory('Closure', function () { return function() {}; });
+		$injector->register('Closure', function () { return function() {}; });
 
 		$this->assertInstanceOf('Dummies\DummyClass', $injector->create('Dummies\DummyClass'));
 	}
@@ -88,7 +83,7 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 		$test = $this;
 
 		$injector = new Injector();
-		$injector->addInstance(function () { return function() {}; });
+		$injector->register(function () { return function() {}; });
 
 		$injector->invoke(
 			function(\Closure $func) use ($test) {
@@ -100,9 +95,9 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	public function testAddClass()
 	{
 		$injector = new Injector();
-		$injector->addClass('Dummies\DummyClass');
+		$injector->register('Dummies\DummyClass');
 
-		$injector->addInstance(function () { return function() {}; });
+		$injector->register(function () { return function() {}; });
 
 		$injector->invoke(function(DummyClass $dummy) {
 			$this->assertInstanceOf('Dummies\DummyClass', $dummy);
@@ -116,11 +111,11 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	{
 		$injector = new Injector();
 
-		$injector->addFactory('Closure', function() {
+		$injector->register('Closure', function() {
 			return new Injector();
 		});
 
-		$injector->addFactory('iMarc\Zap\Injector', function(Injector $injector) {});
+		$injector->register('iMarc\Zap\Injector', function(Injector $injector) {});
 
 		$injector->invoke(function(Injector $injector) {});
 	}
@@ -129,12 +124,12 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	{
 		$injector = new Injector();
 
-		$injector->addInstance($injector);
+		$injector->register($injector);
 
-		$injector->addFactory('Closure', function () { return function() {}; });
+		$injector->register('Closure', function () { return function() {}; });
 
 		$injector->extend('Closure', function(Injector $injector) {
-			$injector->addFactory('junk', function() { return 'stuff'; });
+			$injector->register('junk', function() { return 'stuff'; });
 		});
 
 		$injector->get('Closure');
