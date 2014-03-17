@@ -31,3 +31,14 @@ $returnValue = $injector->invoke(function(Request $req, Session $sess) {
 
 $instance = $injector->create('some\class');
 ```
+
+## Changelog
+
+### 1.x
+
+#### 1.1.0
+* Added ->extend() method, similar to Pimple. Callbacks configured with
+  ->extend() are called after an instance is created by a factory.
+
+#### 1.0.0
+* Initial Release, full of bugs
