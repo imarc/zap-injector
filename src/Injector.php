@@ -116,11 +116,16 @@ class Injector
 		$args = [];
 
 		foreach ($reflection->getParameters() as $param) {
-			if ($param->getClass() === null && !$param->isDefaultValueAvailable()) {
-				throw new LogicException(sprintf(
-					"Argument '%s' is not typehinted and has not default value.",
-					$param->getName()
-				));
+			if ($param->getClass() === null) {
+				if ($param->isDefaultValueAvailable()) {
+					$args[] = $param->getDefaultValue();
+					continue;
+				} else {
+					throw new LogicException(sprintf(
+						"Argument '%s' is not typehinted and has not default value.",
+						$param->getName()
+					));
+				}
 			}
 
 			$typehint = $param->getClass()->getName();
@@ -132,9 +137,16 @@ class Injector
 				));
 			}
 
-			if (!$this->has($typehint) && $param->isDefaultValueAvailable()) {
-				$args[] = $param->getDefaultValue();
-				continue;
+			if (!$this->has($typehint)) {
+				if ($param->isDefaultValueAvailable()) {
+					$args[] = $param->getDefaultValue();
+					continue;
+				} else {
+					throw new LogicException(sprintf(
+						"Missing dependency: '%s' is not defined.",
+						$typehint
+					));
+				}
 			}
 
 			$args[] = $this->get($typehint);
