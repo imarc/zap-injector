@@ -254,11 +254,11 @@ class Injector
 	 */
 	public function register($type, $implementation = null)
 	{
-		if ($implementation instanceof Closure) {
+		if ($implementation instanceof Closure && is_string($type)) {
 			$this->factories[$type] = $implementation;
-		} else if (is_object($implementation)) {
+		} else if (is_object($implementation) && is_string($type)) {
 			$this->instances[$type] = $implementation;
-		} else if (is_callable($implementation)) {
+		} else if (is_callable($implementation) && is_string($type)) {
 			$this->factories[$type] = $implementation;
 		} else if ($implementation === null && is_string($type)) {
 			$this->factories[$type] = $this->createFactory($type);
