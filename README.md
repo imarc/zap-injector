@@ -1,5 +1,7 @@
 # Zap\Injector
 
+[![Build Status](https://travis-ci.org/imarc/zap-injector.png?branch=master)](https://travis-ci.org/imarc/zap-injector)
+
 A simple dependency injection library
 
 The Zap Injector looks to find the middle ground between the simplicity offered by tiny
