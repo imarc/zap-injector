@@ -181,13 +181,13 @@ class Injector
 			$this->instances[$class] = $this->invoke($this->factories[$class]);
 		}
 
+		array_pop($this->resolving);
+
 		if (array_key_exists($class, $this->extensions)) {
 			while ($extension = array_shift($this->extensions[$class])) {
 				$this->invoke($extension);
 			}
 		}
-
-		array_pop($this->resolving);
 
 		return $this->instances[$class];
 	}
@@ -212,7 +212,7 @@ class Injector
 
 	/**
 	 * Register a dependency. The following formats are allowed:
-	 * 
+	 *
 	 * 1. Fully qualified class (or interface) name with factory closure:
 	 *     $injector->register('Fully\Qualified\ClassName', function { .... });
 	 *
