@@ -22,14 +22,14 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	/**
      * @expectedException \InvalidArgumentException
 	 */
-	public function testGetInvalidOffset()
+	public function testInvalidClass()
 	{
 		$injector = new Injector();
 		$injector->get('Invalid');
 	}
 
 
-	public function testIsset()
+	public function testHas()
 	{
 		$injector = new Injector();
 		$injector->register('Test', function() {});
@@ -38,7 +38,7 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	}
 
 
-	public function testUnset()
+	public function testUnregister()
 	{
 		$injector = new Injector();
 		$injector->register('Test', function() {});
