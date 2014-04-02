@@ -58,6 +58,9 @@ $injector->extend('Request', function(Request $req) {
 
 ### 0.x
 
+#### 0.3.0
+* Major refactoring and code cleanup.
+
 #### 0.2.0
 * Added ->register(), removed ->addFactory(), ->addInstance(), and ->addClass()
 * Renamed ->remove() to ->unregister()
