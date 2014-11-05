@@ -145,14 +145,18 @@ class Injector
 	/**
 	 * Confirms if a class or interface has been defined in the Injector.
 	 *
-	 * @param string $class
-	 *     The class or interface name to check.
+	 * @param mixed $class
+	 *     The class, interface, or object to check.
 	 *
 	 * @return boolean
 	 *     Whether it has been defined.
 	 */
 	public function has($class)
 	{
+		if (is_object($class)) {
+			$class = get_class($class);
+		}
+
 		return isset($this->factories[$class]);
 	}
 

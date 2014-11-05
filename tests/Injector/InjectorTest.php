@@ -32,9 +32,15 @@ class InjectorTest extends PHPUnit_Framework_TestCase
 	public function testHas()
 	{
 		$injector = new Injector();
-		$injector->register('Test', function() {});
 
+		// test class name string
+		$injector->register('Test', function() {});
 		$this->assertEquals(true, $injector->has('Test'));
+		
+		// test object
+		$injector->register('Dummies\DummyClass');
+		$dummy = new DummyClass(function(){});
+		$this->assertEquals(true, $injector->has($dummy));
 	}
 
 
