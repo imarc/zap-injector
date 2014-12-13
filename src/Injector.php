@@ -51,7 +51,6 @@ use ReflectionMethod;
 class Injector
 {
 	protected $factories  = [];
-	protected $extensions = [];
 	protected $instances  = [];
 	protected $resolving  = [];
 
@@ -89,27 +88,6 @@ class Injector
 
 
 	/**
-	 * Extends a dependency with additional functionality or settings
-	 *
-	 * @param string $class
-	 *     The class or interface name
-	 *
-	 * @param Callable $callable
-	 *     The callable to extend the class with
-	 *
-	 * @return void
-	 */
-	public function extend($class, Callable $callable)
-	{
-		if (!isset($this->extensions[$class])) {
-			$this->extensions[$class] = [];
-		}
-
-		$this->extensions[$class][] = $callable;
-	}
-
-
-	/**
 	 * Get a dependency from the Injector for class or interface name.
 	 *
 	 * @param string $class
@@ -126,16 +104,17 @@ class Injector
 			));
 		}
 
-		array_push($this->resolving, $class);
-
 		if (!isset($this->instances[$class])) {
-			$this->instances[$class] = $this->invoke($this->factories[$class]);
+			array_push($this->resolving, $class);
+			$pushed = true;
 		}
 
-		array_pop($this->resolving);
+		while ($factory = array_shift($this->factories[$class])) {
+			$this->instances[$class] = $this->invoke($factory);
+		}
 
-		while ($extension = array_shift($this->extensions[$class])) {
-			$this->invoke($extension);
+		if (isset($pushed)) {
+			array_pop($this->resolving);
 		}
 
 		return $this->instances[$class];
@@ -210,26 +189,26 @@ class Injector
 	 */
 	public function register($type, $implementation = null)
 	{
-		if ($implementation instanceof Closure && is_string($type)) {
-			$this->factories[$type] = $implementation;
-		} else if (is_object($implementation) && is_string($type)) {
-			$this->factories[$type] = $this->createFactory($implementation);
-		} else if (is_callable($implementation) && is_string($type)) {
-			$this->factories[$type] = $implementation;
-		} else if ($implementation === null && is_string($type)) {
-			$this->factories[$type] = $this->createFactory($type);
-		} else if (is_string($type) && is_string($implementation)) {
-			$this->factories[$type] = $this->createFactory($implementation);
-		} else if ($implementation === null && is_object($type)) {
-			$this->factories[get_class($type)] = $this->createFactory($type);
-			$type = get_class($type);
-		} else {
-			throw new InvalidArgumentException("Invalid dependency registration");
+		$class = is_object($type) ? get_class($type) : $type;
+
+		if (!isset($this->factories[$class])) {
+			$this->factories[$class] = [];
 		}
 
-		// initialize extensions
-		if (!isset($this->extensions[$type])) {
-			$this->extensions[$type] = [];
+		if ($implementation instanceof Closure && is_string($type)) {
+			$this->factories[$type][] = $implementation;
+		} else if (is_object($implementation) && is_string($type)) {
+			$this->factories[$type][] = $this->createFactory($implementation);
+		} else if (is_callable($implementation) && is_string($type)) {
+			$this->factories[$type][] = $implementation;
+		} else if ($implementation === null && is_string($type)) {
+			$this->factories[$type][] = $this->createFactory($type);
+		} else if (is_string($type) && is_string($implementation)) {
+			$this->factories[$type][] = $this->createFactory($implementation);
+		} else if ($implementation === null && is_object($type)) {
+			$this->factories[$class][] = $this->createFactory($type);
+		} else {
+			throw new InvalidArgumentException("Invalid dependency registration");
 		}
 
 		return $this;
@@ -248,7 +227,6 @@ class Injector
 	{
 		unset($this->factories[$class]);
 		unset($this->instances[$class]);
-		unset($this->extensions[$class]);
 	}
 
 
